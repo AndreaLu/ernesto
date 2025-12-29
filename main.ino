@@ -2,24 +2,24 @@
 #include<SPI.h>
 #include"game.h"
 
+/*
+Tutto va su rete wifi
+
+SSID:
+Lo Spirito Della Nonna
+
+PSW:
+SoloLeiLaSa
+*/
 TFT_eSPI tft = TFT_eSPI(); // Create TFT object
 
 #define PIN_POWER_ON 46
 
-#define W 320
-#define H 170
-
-#define HW 160
-#define HH 85
 
 unsigned long currTime = 0;
 int level = 0;
 
 int numArcs[] = {2, 3, 4, 5};
-int W = 320;
-int H = 170;
-int HW = W/2;
-int HH = H/2;
 
 
 void setup() {
@@ -30,16 +30,14 @@ void setup() {
     tft.init();
     tft.setRotation(1);
 
-    state = IN_LEVEL;
 
     // Arcs should span from abuot 1/3 - 1/10 of the screen height and shuold be equally spaced
     // Let's say there will be at most 7 arcs displayed at once
-    tft.drawSmoothArc(HW, HY, radius, inner_radius, start_angle, end_angle, fg_color, bg_color, arc_end);
-
+    GameInit();
 }
 
 void loop() {
     tft.fillScreen(TFT_BLACK);
-
+    GameUpdate();
 
 }
