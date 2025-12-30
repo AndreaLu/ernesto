@@ -52,19 +52,19 @@ void InitSocket() {
         perror("connect");
         return;
     }
-    std::cout << "Connected!" << std::endl;
-
 }
 
 struct __attribute__((packed)) PACKET {
     int barX;
     float radius0;
     float radius1;
+    float radius2;
     float angle0;
     float angle1;
+    float angle2;
     int selection;
 };
-static_assert(sizeof(PACKET) == 24);
+static_assert(sizeof(PACKET) == 32);
 
 void SendArcsPacket() {
     Arc* arcs = GetArcs();
@@ -72,8 +72,10 @@ void SendArcsPacket() {
     pkt.barX = GetBarX();
     pkt.radius0 = arcs[0].radius;
     pkt.radius1 = arcs[1].radius;
+    pkt.radius2 = arcs[2].radius;
     pkt.angle0 = arcs[0].angle;
     pkt.angle1 = arcs[1].angle;
+    pkt.angle2 = arcs[2].angle;
     pkt.selection = GetSelection();
     // Invio dati
     if (send(sock, &pkt, sizeof(PACKET), 0) != (ssize_t)sizeof(PACKET)) {

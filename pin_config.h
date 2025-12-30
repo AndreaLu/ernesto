@@ -1,19 +1,23 @@
-#pragma once
+#ifndef PIN_CONFIG_H
+#define PIN_CONFIG_H
 
-/*DEBUG*/
 
 
-#define WIFI_CONNECT_WAIT_MAX (30 * 1000)
+/* CUSTOM DEFINES */
+#define WIFI_ENABLED   0
+#define WIFI_SSID      "Lo Spirito Della Nonna"
+#define WIFI_PASSWORD  "SoloLeiLaSa"
+#define API_BASE_URL   "http://192.168.1.100/api"
+#define BAR_WIDTH      20
+#define BAR_WIDTH_F    20.0f
+#define BAR_HEIGHT     4
 
-#define NTP_SERVER1           "pool.ntp.org"
-#define NTP_SERVER2           "time.nist.gov"
-#define GMT_OFFSET_SEC        (3600 * 8)
-#define DAY_LIGHT_OFFSET_SEC  0
 
+/* BOARD DEFINES */
 #define LV_SCREEN_WIDTH       320
 #define LV_SCREEN_HEIGHT      170
 #define LV_BUF_SIZE           (LV_SCREEN_WIDTH * LV_SCREEN_HEIGHT)
-/*ESP32S3*/
+
 #define PIN_POWER_ON          46
 
 #define PIN_IIC_SDA           18
@@ -53,3 +57,5 @@
 #define RADIO_SW1_PIN         43
 #define RADIO_SW0_PIN         44
 #define NFC_CS                16
+
+#endif

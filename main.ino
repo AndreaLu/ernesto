@@ -99,9 +99,9 @@ void loop() {
     }
     // r = arc outer corner radius, ir = arc inner radius. Arc thickness = r-ir+1
     tft.drawSmoothRoundRect( 
-    /* topleft x,y */ GetBarX() - 10, SCREEN_HEIGHT/2 -2, 
+    /* topleft x,y */ GetBarX() - BAR_WIDTH/2, SCREEN_HEIGHT/2 - BAR_HEIGHT/2, 
     /* r,ir        */ 2, 0,
-    /* w,h         */ 20, 4,
+    /* w,h         */ BAR_WIDTH, BAR_HEIGHT,
     /* fg,bg color */ TFT_WHITE, TFT_BLACK,
     /* quadrants   */ 0xF // draw all quadrants
     );
@@ -131,7 +131,9 @@ void io_task(void *param)
     */
 
     // Init the networking
+    #if(WIFI_ENABLED == 1)
     NETW::Init();
+    #endif
 
     // Init user I/O (encoder and big button)
     attachInterrupt( 

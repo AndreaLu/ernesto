@@ -63,12 +63,14 @@ last_press = 0
 
 
 class PACKET:
-    barX,radius0,radius1,angle0,angle1,selection = 0,0,0,0,0,0
+    barX,radius0,radius1,radius2,angle0,angle1,angle2,selection = 0,0,0,0,0,0,0,0
     def __init__(self):
         self.radius0 = 30
         self.radius1 = 42
         self.angle0 = 0
         self.angle1 = 1
+        self.radius2 = 54
+        self.angle2 = 2
 
 
 pkt = PACKET()
@@ -91,8 +93,9 @@ def server():
     while running:
         data = conn.recv(1024)
         if not data: break
-        pkt.barX,pkt.radius0,pkt.radius1,pkt.angle0,pkt.angle1,pkt.selection = struct.unpack("iffffi", data)
-        print(f"received {pkt.barX}")
+        pkt.barX,pkt.radius0,pkt.radius1,pkt.radius2,pkt.angle0,pkt.angle1,pkt.angle2,pkt.selection = struct.unpack("iffffffi", data)
+        print(f"received selection {pkt.selection}")
+
     conn.close()
 
 t = threading.Thread(target=server, args=(), kwargs={})
@@ -118,6 +121,7 @@ while running:
     
     draw_arc(virtual, (255,0,0) if pkt.selection == 0 else (200, 200, 200), CENTER, pkt.radius0, pkt.angle0, GAP_ANGLE)
     draw_arc(virtual, (255,0,0) if pkt.selection == 1 else (200, 200, 200), CENTER, pkt.radius1, pkt.angle1 , GAP_ANGLE)
+    draw_arc(virtual, (255,0,0) if pkt.selection == 2 else (200, 200, 200), CENTER, pkt.radius2, pkt.angle2 , GAP_ANGLE)
     
     rect = pygame.Rect(pkt.barX-10, 170/2-2, 20, 4)
     pygame.draw.rect(virtual, (200, 200, 200), rect, border_radius=3)

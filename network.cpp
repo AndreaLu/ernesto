@@ -1,10 +1,9 @@
 #include "network.h"
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include "pin_config.h"
 
-#define WIFI_SSID      "Lo Spirito Della Nonna"
-#define WIFI_PASSWORD  "SoloLeiLaSa"
-#define API_BASE_URL   "http://192.168.1.100/api"
+
 
 
 void NETW::Init() {
