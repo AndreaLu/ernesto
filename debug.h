@@ -15,7 +15,6 @@
 #include <chrono>
 #include <thread>
 #include "game.h"
-#include <windows.h>
 
 unsigned long GetMillis() {
     auto now = std::chrono::steady_clock::now();
@@ -83,27 +82,44 @@ void SendArcsPacket() {
     }
 }
 
-
+float timer0 = 0;
+float timer1 = 0;
+float timer2 = 0;
+bool dir = false;
+int cnt = 0;
 int main() {
-    bool a_pressed = false;
-    bool a_prev_pressed = false;
-
-    bool b_pressed = false;
-    bool b_prev_pressed = false;
+    InitSocket();
     GameInit();
-    
-    while (true) {
-        a_pressed = (GetAsyncKeyState('A') & 0x8000);
-        if( a_pressed && !a_prev_pressed)
-            GamePressButton();
-        a_prev_pressed = a_pressed;
 
-        b_pressed = (GetAsyncKeyState('B') & 0x8000);
-        if( b_pressed && !b_prev_pressed)
-            GameLongPressButton();
-        b_prev_pressed = b_pressed;
-        
+    while (true) {
         GameUpdate();
+        SendArcsPacket();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000 / 60));
+        timer0 += 1.0f/60.0f;
+        
+        if( timer0 >= 4 ) {
+            GamePressButton();
+            timer0 = 0;
+        }
+
+        timer1 += 1.0f/60.0f;
+        if( timer1 >= 1.0f/4.0f ) {
+            timer1 = 0.0f;
+            GameRotateEncoder( dir );
+            cnt += 1;
+            if( cnt >= 10 ) {
+                cnt = 0;
+                dir = !dir;
+            }
+        }
+
+        timer2 += 1.0f/60.0f;
+        if( timer2 >= 5.0f ) {
+            timer2 = 0.0f;
+            GameLongPressButton();
+        }
+
+
     }
     return 0;
 }

@@ -16,6 +16,8 @@ enum GameState {
 GameState state;
 unsigned short currLevel = 0;
 unsigned long time0;
+float time_back = 0;
+unsigned long prevTime0;
 unsigned long pressStartTime;
 unsigned long pressDuration;
 
@@ -74,19 +76,22 @@ void GameInit() {
     arcs[5].offset = 8;
     arcs[6].offset = 12;
 
-    #ifdef DEBUG
-    InitSocket();
-    #endif
+
 }
 
+static float wronglerp(float x) {
+    //return sin((1-x)*(1-x)*3.9633f*3.9633f);
+    //return sin((1-x)*(1-x)*3.54491f*3.54491f);
+    return sin(x*2.0f*pi*3.0f)/(5.0f*(x+0.2f));
+}
 
 // Called once per frame
 void GameUpdate() {
     unsigned long time_ms;
     float time;
+    int numCorrectRings = 0;
 
-    time_ms = GetMillis() - time0;
-    time = time_ms / 1000.0f;
+    time = ((float)(GetMillis() - time0)) / 1000.0f;
 
     // Manage Inputs
     // buttonPressed is externally set to 1 only once when the button is pressed
@@ -103,6 +108,7 @@ void GameUpdate() {
     */
     switch( state ) {
         case GS_PLAYING:
+            time += time_back;
             // Update arcs angles
             for( int i=0; i < numArcs[currLevel]; i++ ) {
                 arcs[i].angle = arcs[i].angularSpeed * time + arcs[i].offset * angleStep;
@@ -110,24 +116,34 @@ void GameUpdate() {
             // Select the next arc to rotate with the encoder
             //if( buttonReleased && pressDuration < 1000 ) {
             if( buttonShortPressed ) {
+                buttonShortPressed = false;
                 selection = (selection + 1) % numArcs[currLevel];
             }
-            arcs[selection].offset += encoderRotation;
+            if( encoderRotation != 0 ) {
+                arcs[selection].offset += encoderRotation;
+                encoderRotation = 0;
+            }
             // Attempt a solution
             //if( buttonReleased && pressDuration >= 1000 ) {
             if( buttonLongPressed ) {
+                buttonLongPressed = false;
                 bool allAligned = true;
+                numCorrectRings = 0;
                 for( int i=0; i < numArcs[currLevel]; i++ ) {
                     if( arcs[i].angle > ANGLE_TOLERANCE || arcs[i].angle < -ANGLE_TOLERANCE)  {
                         allAligned = false;
                         break;
+                    } else {
+                        numCorrectRings += 1;
                     }
                 }
                 if( allAligned ) {
                     state = GS_CHECKING_RIGHT;
                     time0 = GetMillis();
+                    time_back = 0;
                 } else {
                     state = GS_CHECKING_WRONG;
+                    time_back = time;
                     time0 = GetMillis();
                 }
                 selection = 0;
@@ -136,12 +152,13 @@ void GameUpdate() {
 
         case GS_CHECKING_WRONG:
             // This state lasts 2 seconds
-            barX = sin( 3.0f * 2.0f * pi * time / 2.0f ) * 20 + SCREEN_WIDTH / 2;
-            if( time > 2.0f ) {
+            barX = wronglerp(time/1.3f)*10 + SCREEN_WIDTH/2;//sin( 3.0f * 2.0f * pi * time * time / 2.0f ) * 10 + SCREEN_WIDTH / 2;
+            if( time > 1.3f ) {
                 state = GS_PLAYING;
                 time0 = GetMillis();
                 barX = SCREEN_WIDTH / 2;
             }
+            break;
         case GS_CHECKING_RIGHT:
             // This state lasts 2 seconds
             barX = lerp( SCREEN_WIDTH / 2, SCREEN_WIDTH, (time / 2.0f)*(time / 2.0f) );
@@ -174,17 +191,9 @@ void GameUpdate() {
             break;
     }
 
-    // Reset inputs
-    encoderRotation = 0;
-    //buttonPressed = false;
-    //buttonReleased = false;
-    buttonShortPressed = false;
-    buttonLongPressed = false;
+    
+    
 
-    #ifdef DEBUG
-    SendArcsPacket();
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000 / 60));
-    #endif
 }
 
 

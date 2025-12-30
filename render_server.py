@@ -92,7 +92,7 @@ def server():
         data = conn.recv(1024)
         if not data: break
         pkt.barX,pkt.radius0,pkt.radius1,pkt.angle0,pkt.angle1,pkt.selection = struct.unpack("iffffi", data)
-        print(f"received {pkt.radius0},{pkt.radius1},{pkt.angle0},{pkt.angle1}")
+        print(f"received {pkt.barX}")
     conn.close()
 
 t = threading.Thread(target=server, args=(), kwargs={})
@@ -116,8 +116,8 @@ while running:
     virtual.fill((20, 20, 20))
 
     
-    draw_arc(virtual, (255,255,255) if pkt.selection == 0 else (200, 200, 200), CENTER, pkt.radius0, pkt.angle0, GAP_ANGLE)
-    draw_arc(virtual, (255,255,255) if pkt.selection == 1 else (200, 200, 200), CENTER, pkt.radius1, pkt.angle1 , GAP_ANGLE)
+    draw_arc(virtual, (255,0,0) if pkt.selection == 0 else (200, 200, 200), CENTER, pkt.radius0, pkt.angle0, GAP_ANGLE)
+    draw_arc(virtual, (255,0,0) if pkt.selection == 1 else (200, 200, 200), CENTER, pkt.radius1, pkt.angle1 , GAP_ANGLE)
     
     rect = pygame.Rect(pkt.barX-10, 170/2-2, 20, 4)
     pygame.draw.rect(virtual, (200, 200, 200), rect, border_radius=3)
