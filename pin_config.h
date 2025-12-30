@@ -1,8 +1,7 @@
 #pragma once
 
 /*DEBUG*/
-#define WIFI_SSID             "Lo Spirito Della Nonna"
-#define WIFI_PASSWORD         "SoloLeiLaSa"
+
 
 #define WIFI_CONNECT_WAIT_MAX (30 * 1000)
 

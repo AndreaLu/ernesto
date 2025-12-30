@@ -1,21 +1,20 @@
-#include<TFT_eSPI.h> // Graphics and font library for ST7735 driver chip
-#include<SPI.h>
-#include"game.h"
-#include"pin_config.h"
-#include<OneButton.h>
+#include <TFT_eSPI.h> // Graphics and font library for ST7735 driver chip
+#include <SPI.h>
+#include "game.h"
+#include "pin_config.h"
+#include <OneButton.h>
 #include <RotaryEncoder.h>
+#include "network.h"
+
 unsigned long GetMillis() { return millis(); }
 
 /*
 TODOS:
-   - use sprite as render buffer to avoid flickering
-   - connect to SSID: "Lo Spirito Della Nonna" / password: "SoloLeiLaSa"
-   - API call to signal game over
+   - start screen
    - test with sleeps to reduce CPU usage if possible
-   - arc color while selected
    - sounds
    - encoder LEDs
-   - start screen
+   - use sprite as render buffer to avoid flickering
 */
 typedef struct {
     uint8_t cmd;
@@ -41,7 +40,7 @@ lcd_cmd_t lcd_st7789v[] = {
 TFT_eSPI tft = TFT_eSPI(170,320); // Create TFT object
 
 Arc* gameArcs;
-void ui_task(void *param);
+void io_task(void *param); // handles user I/O and WiFi
 
 RotaryEncoder encoder(PIN_ENCODE_A, PIN_ENCODE_B, RotaryEncoder::LatchMode::TWO03);
 OneButton button(PIN_ENCODE_BTN, true);
@@ -76,7 +75,7 @@ void setup() {
     GameInit();
     gameArcs = GetArcs();
 
-    xTaskCreatePinnedToCore(ui_task, "ui_task", 1024 * 40, NULL, 3, NULL, 1);
+    xTaskCreatePinnedToCore(io_task, "io_task", 1024 * 40, NULL, 3, NULL, 1);
 }
 
 inline float radtodeg(const float rad) {
@@ -93,7 +92,7 @@ void loop() {
         /* center x,y          */ SCREEN_WIDTH/2, SCREEN_HEIGHT/2,
         /* inner, outer radius */ gameArcs[numArc].radius+1, gameArcs[numArc].radius-2,
         /* stard and end angle */ radtodeg(gameArcs[numArc].angle) - 5, radtodeg(gameArcs[numArc].angle) + 5,
-        /* fg_col, bg_col      */ TFT_WHITE, TFT_BLACK, 
+        /* fg_col, bg_col      */ GetSelection() == numArc ? TFT_RED : TFT_WHITE, TFT_BLACK, 
         /* round edges         */ true
         );
         numArc++;
@@ -111,7 +110,7 @@ void loop() {
 }
 
 
-void ui_task(void *param)
+void io_task(void *param)
 {
     //static lv_disp_draw_buf_t draw_buf;
     //static lv_color_t *buf1, *buf2;
@@ -131,7 +130,10 @@ void ui_task(void *param)
     }
     */
 
+    // Init the networking
+    NETW::Init();
 
+    // Init user I/O (encoder and big button)
     attachInterrupt( 
         digitalPinToInterrupt(PIN_ENCODE_A), []() {
         encoder.tick();

@@ -3,6 +3,7 @@
 #ifdef DEBUG
 #include "debug.h"
 #endif
+#include "network.h"
 
 enum GameState {
     GS_PLAYING,
@@ -166,7 +167,7 @@ void GameUpdate() {
                 currLevel++;
                 if( currLevel >= MAX_LEVEL ) {
                     state = GS_GAME_OVER;
-                    // TODO: call api to signal game over
+                    NETW::SignalCompletion();
                 } else {
                     // TODO: use GS_LEVEL_TRANSITION for some animations
                     state = GS_PLAYING;
