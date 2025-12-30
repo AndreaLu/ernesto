@@ -9,6 +9,9 @@ import time
 
 pygame.init()
 
+def intToCol(icol):
+    return (icol & 0xFF, (icol & 0xFF00) >> 8, (icol & 0xFF0000) >> 16)
+
 # --- DPI & scaling ---
 def get_scale_for_physical_size(px_w, px_h, diagonal_inch, assumed_dpi=95):
     cmpp_big = 53/1980 # 
@@ -63,7 +66,7 @@ last_press = 0
 
 
 class PACKET:
-    barX,radius0,radius1,radius2,angle0,angle1,angle2,selection = 0,0,0,0,0,0,0,0
+    barX,radius0,radius1,radius2,angle0,angle1,angle2,color0,color1,color2,posx0,posx1,posx2,posy0,posy1,posy2,selection = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
     def __init__(self):
         self.radius0 = 30
         self.radius1 = 42
@@ -71,6 +74,9 @@ class PACKET:
         self.angle1 = 1
         self.radius2 = 54
         self.angle2 = 2
+        self.color0 = 0xFFFFFF
+        self.color1 = 0xFFFFFF
+        self.color2 = 0xFFFFFF
 
 
 pkt = PACKET()
@@ -93,8 +99,8 @@ def server():
     while running:
         data = conn.recv(1024)
         if not data: break
-        pkt.barX,pkt.radius0,pkt.radius1,pkt.radius2,pkt.angle0,pkt.angle1,pkt.angle2,pkt.selection = struct.unpack("iffffffi", data)
-        print(f"received selection {pkt.selection}")
+        pkt.barX,pkt.radius0,pkt.radius1,pkt.radius2,pkt.angle0,pkt.angle1,pkt.angle2,pkt.color0,pkt.color1,pkt.color2,pkt.posx0,pkt.posx1,pkt.posx2,pkt.posy0,pkt.posy1,pkt.posy2,pkt.selection = struct.unpack("iffffffiiiiiiiiii", data)
+        print(f"received angle2: {pkt.angle2}")
 
     conn.close()
 
@@ -119,18 +125,13 @@ while running:
     virtual.fill((20, 20, 20))
 
     
-    draw_arc(virtual, (255,0,0) if pkt.selection == 0 else (200, 200, 200), CENTER, pkt.radius0, pkt.angle0, GAP_ANGLE)
-    draw_arc(virtual, (255,0,0) if pkt.selection == 1 else (200, 200, 200), CENTER, pkt.radius1, pkt.angle1 , GAP_ANGLE)
-    draw_arc(virtual, (255,0,0) if pkt.selection == 2 else (200, 200, 200), CENTER, pkt.radius2, pkt.angle2 , GAP_ANGLE)
+    draw_arc(virtual, intToCol(pkt.color0), (VIRTUAL_W // 2 + pkt.posx0, VIRTUAL_H // 2 + pkt.posy0), pkt.radius0, pkt.angle0, GAP_ANGLE)
+    draw_arc(virtual, intToCol(pkt.color1), (VIRTUAL_W // 2 + pkt.posx1, VIRTUAL_H // 2 + pkt.posy1), pkt.radius1, pkt.angle1 , GAP_ANGLE)
+    draw_arc(virtual, intToCol(pkt.color2), (VIRTUAL_W // 2 + pkt.posx2, VIRTUAL_H // 2 + pkt.posy2), pkt.radius2, pkt.angle2 , GAP_ANGLE)
     
     rect = pygame.Rect(pkt.barX-10, 170/2-2, 20, 4)
     pygame.draw.rect(virtual, (200, 200, 200), rect, border_radius=3)
 
-    if success:
-        txt = font.render("OK", True, (0, 255, 0))
-    else:
-        txt = font.render("SPACE @ 0°", True, (200, 200, 200))
-    virtual.blit(txt, (5, 5))
 
     # scale to real window
     pygame.transform.scale(virtual, (WINDOW_W, WINDOW_H), screen)

@@ -1,8 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 
-#define SCREEN_WIDTH 320
-#define SCREEN_HEIGHT 170
+
 struct Arc {
     float radius;
     float angle;
@@ -10,9 +9,21 @@ struct Arc {
     float width;
     int offset;
     bool enabled;
+    uint32_t color;
+    float posX, posY;
+    float velX, velY;
+};
+enum GameState {
+    GS_PLAYING,
+    GS_LEVEL_TRANSITION,
+    GS_CHECKING_WRONG,
+    GS_CHECKING_RIGHT,
+    GS_GAME_OVER,
+    GS_MAX,
 };
 
-const int MAX_ARCS = 5;
+
+
 
 
 void GameInit();
@@ -23,8 +34,9 @@ void GameLongPressButton();
 // Call this only once when the encoder is rotated
 void GameRotateEncoder(bool clockwise);
 Arc* GetArcs();
+GameState GetState();
 int GetSelection();
-
+int GetNumCorrect();
 unsigned long GetMillis();
 int GetBarX();
 #endif

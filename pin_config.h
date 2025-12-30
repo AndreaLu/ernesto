@@ -4,14 +4,21 @@
 
 
 /* CUSTOM DEFINES */
-#define WIFI_ENABLED   0
-#define WIFI_SSID      "Lo Spirito Della Nonna"
-#define WIFI_PASSWORD  "SoloLeiLaSa"
-#define API_BASE_URL   "http://192.168.1.100/api"
-#define BAR_WIDTH      20
-#define BAR_WIDTH_F    20.0f
-#define BAR_HEIGHT     4
-
+#define WIFI_ENABLED     0
+#define WIFI_SSID        "Lo Spirito Della Nonna"
+#define WIFI_PASSWORD    "SoloLeiLaSa"
+#define API_BASE_URL     "http://192.168.1.100/api"
+#define BAR_WIDTH        20
+#define BAR_WIDTH_F      20.0f
+#define BAR_HEIGHT       4
+#define RINGS_SEP        8
+#define RINGS_SEP_F      8.0f
+#define RINGS_THICKNESS  3
+#define SCREEN_WIDTH_F   320.0f
+#define SCREEN_WIDTH     320
+#define SCREEN_HEIGHT    170
+#define GRAVITY_Y        0.13f
+#define MAX_RINGS        5
 
 /* BOARD DEFINES */
 #define LV_SCREEN_WIDTH       320

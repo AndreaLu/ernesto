@@ -1,6 +1,6 @@
 #ifndef NETWORK_H
 #define NETWORK_H
-
+#include <cstdint>
 
 /*
   debug.h: only included when compiling the project under windwos for testing
@@ -15,6 +15,7 @@
 #include <chrono>
 #include <thread>
 #include "game.h"
+#include "pin_config.h"
 
 unsigned long GetMillis() {
     auto now = std::chrono::steady_clock::now();
@@ -26,7 +27,7 @@ unsigned long GetMillis() {
 
 
 int sock;
-uint8_t* packet = new uint8_t[MAX_ARCS*sizeof(Arc)];
+uint8_t* packet = new uint8_t[MAX_RINGS*sizeof(Arc)];
 
 
 void InitSocket() {
@@ -62,9 +63,18 @@ struct __attribute__((packed)) PACKET {
     float angle0;
     float angle1;
     float angle2;
+    uint32_t color0;
+    uint32_t color1;
+    uint32_t color2;
+    int posx0;
+    int posx1;
+    int posx2;
+    int posy0;
+    int posy1;
+    int posy2;
     int selection;
 };
-static_assert(sizeof(PACKET) == 32);
+static_assert(sizeof(PACKET) == 68);
 
 void SendArcsPacket() {
     Arc* arcs = GetArcs();
@@ -76,6 +86,15 @@ void SendArcsPacket() {
     pkt.angle0 = arcs[0].angle;
     pkt.angle1 = arcs[1].angle;
     pkt.angle2 = arcs[2].angle;
+    pkt.color0 = arcs[0].color;
+    pkt.color1 = arcs[1].color;
+    pkt.color2 = arcs[2].color;
+    pkt.posx0 = arcs[0].posX;
+    pkt.posx1 = arcs[1].posX;
+    pkt.posx2 = arcs[2].posX;
+    pkt.posy0 = arcs[0].posY;
+    pkt.posy1 = arcs[1].posY;
+    pkt.posy2 = arcs[2].posY;
     pkt.selection = GetSelection();
     // Invio dati
     if (send(sock, &pkt, sizeof(PACKET), 0) != (ssize_t)sizeof(PACKET)) {

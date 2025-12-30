@@ -86,13 +86,14 @@ void loop() {
     // Render Loop
     tft.fillScreen(TFT_BLACK);
     int numArc = 0;
+    uint32_t arcCol;
     
     while( gameArcs[numArc].enabled ) {
         tft.drawSmoothArc(
-        /* center x,y          */ SCREEN_WIDTH/2, SCREEN_HEIGHT/2,
+        /* center x,y          */ SCREEN_WIDTH/2 + gameArcs[numArc].posX, SCREEN_HEIGHT/2 + gameArcs[numArc].posY,
         /* inner, outer radius */ gameArcs[numArc].radius+1, gameArcs[numArc].radius-2,
         /* stard and end angle */ radtodeg(gameArcs[numArc].angle) - 5, radtodeg(gameArcs[numArc].angle) + 5,
-        /* fg_col, bg_col      */ GetSelection() == numArc ? TFT_RED : TFT_WHITE, TFT_BLACK, 
+        /* fg_col, bg_col      */ gameArcs[numArc].color, TFT_BLACK, 
         /* round edges         */ true
         );
         numArc++;
