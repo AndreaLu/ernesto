@@ -57,6 +57,7 @@ void InitSocket() {
 
 struct __attribute__((packed)) PACKET {
     int barX;
+    int barY;
     float radius0;
     float radius1;
     float radius2;
@@ -74,12 +75,13 @@ struct __attribute__((packed)) PACKET {
     int posy2;
     int selection;
 };
-static_assert(sizeof(PACKET) == 68);
+static_assert(sizeof(PACKET) == 72);
 
 void SendArcsPacket() {
     Arc* arcs = GetArcs();
     PACKET pkt;
     pkt.barX = GetBarX();
+    pkt.barY = GetBarY();
     pkt.radius0 = arcs[0].radius;
     pkt.radius1 = arcs[1].radius;
     pkt.radius2 = arcs[2].radius;

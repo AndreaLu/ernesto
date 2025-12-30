@@ -14,6 +14,7 @@ struct Arc {
     float velX, velY;
 };
 enum GameState {
+    GS_PREPARING_LEVEL,
     GS_PLAYING,
     GS_LEVEL_TRANSITION,
     GS_CHECKING_WRONG,
@@ -39,4 +40,5 @@ int GetSelection();
 int GetNumCorrect();
 unsigned long GetMillis();
 int GetBarX();
+int GetBarY();
 #endif

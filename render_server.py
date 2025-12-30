@@ -29,7 +29,7 @@ WINDOW_W = 320 # int(VIRTUAL_W * scale)
 WINDOW_H = 170 # int(VIRTUAL_H * scale)
 
 screen = pygame.display.set_mode((WINDOW_W, WINDOW_H))
-pygame.display.set_caption("Concentric arcs timing game")
+pygame.display.set_caption("render server")
 
 clock = pygame.time.Clock()
 
@@ -66,7 +66,7 @@ last_press = 0
 
 
 class PACKET:
-    barX,radius0,radius1,radius2,angle0,angle1,angle2,color0,color1,color2,posx0,posx1,posx2,posy0,posy1,posy2,selection = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    barX,barY,radius0,radius1,radius2,angle0,angle1,angle2,color0,color1,color2,posx0,posx1,posx2,posy0,posy1,posy2,selection = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
     def __init__(self):
         self.radius0 = 30
         self.radius1 = 42
@@ -99,7 +99,7 @@ def server():
     while running:
         data = conn.recv(1024)
         if not data: break
-        pkt.barX,pkt.radius0,pkt.radius1,pkt.radius2,pkt.angle0,pkt.angle1,pkt.angle2,pkt.color0,pkt.color1,pkt.color2,pkt.posx0,pkt.posx1,pkt.posx2,pkt.posy0,pkt.posy1,pkt.posy2,pkt.selection = struct.unpack("iffffffiiiiiiiiii", data)
+        pkt.barX,pkt.barY,pkt.radius0,pkt.radius1,pkt.radius2,pkt.angle0,pkt.angle1,pkt.angle2,pkt.color0,pkt.color1,pkt.color2,pkt.posx0,pkt.posx1,pkt.posx2,pkt.posy0,pkt.posy1,pkt.posy2,pkt.selection = struct.unpack("iiffffffiiiiiiiiii", data)
         print(f"received angle2: {pkt.angle2}")
 
     conn.close()
@@ -129,7 +129,7 @@ while running:
     draw_arc(virtual, intToCol(pkt.color1), (VIRTUAL_W // 2 + pkt.posx1, VIRTUAL_H // 2 + pkt.posy1), pkt.radius1, pkt.angle1 , GAP_ANGLE)
     draw_arc(virtual, intToCol(pkt.color2), (VIRTUAL_W // 2 + pkt.posx2, VIRTUAL_H // 2 + pkt.posy2), pkt.radius2, pkt.angle2 , GAP_ANGLE)
     
-    rect = pygame.Rect(pkt.barX-10, 170/2-2, 20, 4)
+    rect = pygame.Rect(pkt.barX-10, pkt.barY-2, 20, 4)
     pygame.draw.rect(virtual, (200, 200, 200), rect, border_radius=3)
 
 

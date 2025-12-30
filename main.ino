@@ -100,7 +100,7 @@ void loop() {
     }
     // r = arc outer corner radius, ir = arc inner radius. Arc thickness = r-ir+1
     tft.drawSmoothRoundRect( 
-    /* topleft x,y */ GetBarX() - BAR_WIDTH/2, SCREEN_HEIGHT/2 - BAR_HEIGHT/2, 
+    /* topleft x,y */ GetBarX() - BAR_WIDTH/2, GetBarY() - BAR_HEIGHT/2, 
     /* r,ir        */ 2, 0,
     /* w,h         */ BAR_WIDTH, BAR_HEIGHT,
     /* fg,bg color */ TFT_WHITE, TFT_BLACK,

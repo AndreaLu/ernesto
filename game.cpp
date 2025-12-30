@@ -34,8 +34,10 @@ Arc* GetArcs() {
     return &arcs[0];
 }
 int barX = SCREEN_WIDTH / 2;
+int barY = - SCREEN_HEIGHT/2;
 
 int GetBarX() { return barX; }
+int GetBarY() { return barY; }
 
 #ifdef DEBUG
     #define PI 3.14159265f
@@ -89,7 +91,7 @@ float randomFloat(float minVal, float maxVal) {
 #endif
 
 void GameInit() {
-    state = GS_PLAYING;
+    state = GS_PREPARING_LEVEL;
     time0 = GetMillis();
     #ifndef DEBUG
     randomSeed(esp_random());
@@ -105,7 +107,7 @@ void GameInit() {
         arcs[i].enabled = false;
         arcs[i].color = TFT_CYAN;
         arcs[i].posX = 0.0f;
-        arcs[i].posY = 0.0f;
+        arcs[i].posY = -SCREEN_HEIGHT_F;
         #ifndef DEBUG
         arcs[i].offset = random(1,25);
         #else
@@ -134,21 +136,37 @@ void GameUpdate() {
     
 
     time = ((float)(GetMillis() - time0)) / 1000.0f;
-
+    float jj;
     switch( state ) {
+        case GS_PREPARING_LEVEL:
+            jj = sigmoide(time/1.3f);
+            for( int i=0; i < numArcs[currLevel]; i++ ) {
+                arcs[i].posY = lerp(-SCREEN_HEIGHT_F,0.0f,jj);
+                arcs[i].angle = arcs[i].offset * angleStep;
+                barY = int(lerp(-SCREEN_HEIGHT_F/2.0f,SCREEN_HEIGHT_F/2.0f,jj));
+            }
+            if( time >= 1.3f ) {
+                for( int i=0; i < numArcs[currLevel]; i++ ) {
+                    arcs[i].posY = 0.0f;
+                }
+                barY = SCREEN_HEIGHT/2;
+                state = GS_PLAYING;
+                time0 = GetMillis();
+            }
+            break;
         case GS_PLAYING:
             time += time_back;
             // Update arcs angles
             // TODO: rimetti i=0
-            for( int i=2; i < numArcs[currLevel]; i++ ) {
+            for( int i=0; i < numArcs[currLevel]; i++ ) {
                 arcs[i].angle = arcs[i].angularSpeed * time + arcs[i].offset * angleStep;
                 while( arcs[i].angle > PIPI ) arcs[i].angle -= PIPI;
                 arcs[i].color = i == selection ? TFT_CYAN : TFT_WHITE;
             }
             // TODO: togli questo for
-            for( int i=0; i < numArcs[currLevel]; i++ ) {
-                arcs[i].color = i == selection ? TFT_CYAN : TFT_WHITE;
-            }
+            //for( int i=0; i < numArcs[currLevel]; i++ ) {
+            //    arcs[i].color = i == selection ? TFT_CYAN : TFT_WHITE;
+            // }
             // Select the next arc to rotate with the encoder
             //if( buttonReleased && pressDuration < 1000 ) {
             if( buttonShortPressed ) {
@@ -158,6 +176,11 @@ void GameUpdate() {
             if( encoderRotation != 0 ) {
                 arcs[selection].offset += encoderRotation;
                 encoderRotation = 0;
+            }
+            if( time > 10.0f ) {
+                for( int i=0; i < numArcs[currLevel]; i++ ) {
+                    arcs[i].angle = 0.0f;
+                }
             }
             // Attempt a solution
             //if( buttonReleased && pressDuration >= 1000 ) {
@@ -185,6 +208,7 @@ void GameUpdate() {
                     time_back = time;
                     time0 = GetMillis();
                 }
+                
             }
             break;
 

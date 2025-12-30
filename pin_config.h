@@ -17,6 +17,7 @@
 #define SCREEN_WIDTH_F   320.0f
 #define SCREEN_WIDTH     320
 #define SCREEN_HEIGHT    170
+#define SCREEN_HEIGHT_F  170.0f
 #define GRAVITY_Y        0.13f
 #define MAX_RINGS        5
 
