@@ -1,6 +1,6 @@
 #ifndef GAME_H
 #define GAME_H
-
+#include <stdint.h>
 
 struct Arc {
     float radius;
@@ -14,6 +14,7 @@ struct Arc {
     float velX, velY;
 };
 enum GameState {
+    GS_HEADER,
     GS_PREPARING_LEVEL,
     GS_PLAYING,
     GS_LEVEL_TRANSITION,
@@ -22,10 +23,6 @@ enum GameState {
     GS_GAME_OVER,
     GS_MAX,
 };
-
-
-
-
 
 void GameInit();
 void GameUpdate();
@@ -41,4 +38,5 @@ int GetNumCorrect();
 unsigned long GetMillis();
 int GetBarX();
 int GetBarY();
+uint16_t AlphaBlend(uint8_t alpha, uint16_t fgc, uint16_t bgc);
 #endif

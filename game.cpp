@@ -42,11 +42,12 @@ int GetBarY() { return barY; }
 #ifdef DEBUG
     #define PI 3.14159265f
 #endif
+#define PIf 3.14159265f
 #define PIPI 6.283185307f
-#define DEGTORAD(x) (x/180.0f*PI)
-#define RADTODEG(x) (x/PI*180.0f)
+#define DEGTORAD(x) (x/180.0f*PIf)
+#define RADTODEG(x) (x/PIf*180.0f)
 
-const float ANGLE_TOLERANCE = DEGTORAD(20.0f);
+const float ANGLE_TOLERANCE = DEGTORAD(9.0f);
 
 float lerp(float a, float b, float t) {
     return a + t * (b - a);
@@ -55,7 +56,7 @@ float lerp(float a, float b, float t) {
 const float angleStep = DEGTORAD(30.0f);
 
 const int MAX_LEVEL = 4;
-const int numArcs[MAX_LEVEL] = {3, 3, 4, 5};
+const int numArcs[MAX_LEVEL] = {2, 3, 4, 5};
 //bool buttonPressed = false;
 //bool prevButtonPressed = false;
 //bool buttonReleased = false;
@@ -91,7 +92,7 @@ float randomFloat(float minVal, float maxVal) {
 #endif
 
 void GameInit() {
-    state = GS_PREPARING_LEVEL;
+    state = GS_HEADER;
     time0 = GetMillis();
     #ifndef DEBUG
     randomSeed(esp_random());
@@ -138,14 +139,26 @@ void GameUpdate() {
     time = ((float)(GetMillis() - time0)) / 1000.0f;
     float jj;
     switch( state ) {
+        case GS_HEADER:
+            if( buttonShortPressed ) {
+                buttonShortPressed = false;
+                state = GS_PREPARING_LEVEL;
+                time0 = GetMillis();
+            }
+            break;
         case GS_PREPARING_LEVEL:
-            jj = sigmoide(time/1.3f);
+            
             for( int i=0; i < numArcs[currLevel]; i++ ) {
+                jj = (time+0.07*(i+1))/1.3f;
+                jj = jj > 1.0f ? 1.0f : jj;
+                jj = sigmoide(jj);
                 arcs[i].posY = lerp(-SCREEN_HEIGHT_F,0.0f,jj);
                 arcs[i].angle = arcs[i].offset * angleStep;
-                barY = int(lerp(-SCREEN_HEIGHT_F/2.0f,SCREEN_HEIGHT_F/2.0f,jj));
             }
-            if( time >= 1.3f ) {
+            jj = time/1.3f > 1.0f ? 1.0f : time/1.3f; 
+            barY = int(lerp(-SCREEN_HEIGHT_F/2.0f,SCREEN_HEIGHT_F/2.0f,sigmoide(jj)));
+            
+            if( time >= 2.0f ) {
                 for( int i=0; i < numArcs[currLevel]; i++ ) {
                     arcs[i].posY = 0.0f;
                 }
@@ -159,9 +172,13 @@ void GameUpdate() {
             // Update arcs angles
             // TODO: rimetti i=0
             for( int i=0; i < numArcs[currLevel]; i++ ) {
-                arcs[i].angle = arcs[i].angularSpeed * time + arcs[i].offset * angleStep;
+                float alpha = arcs[i].angularSpeed * time + arcs[i].offset * angleStep;
+                arcs[i].angle = alpha;
+                float k = min(1.0f,min(alpha,PIPI-alpha)/DEGTORAD(8.0f));
+                k = cos(k*PI/2.0f);
                 while( arcs[i].angle > PIPI ) arcs[i].angle -= PIPI;
-                arcs[i].color = i == selection ? TFT_CYAN : TFT_WHITE;
+                arcs[i].color = (i == selection) ? TFT_CYAN : TFT_WHITE;
+                arcs[i].color = AlphaBlend( (uint8_t)(k*255), arcs[i].color, TFT_GREEN);
             }
             // TODO: togli questo for
             //for( int i=0; i < numArcs[currLevel]; i++ ) {
@@ -192,7 +209,7 @@ void GameUpdate() {
                     // angle is always between 0 and 2PI, 
                     float alpha = arcs[i].angle;
                     if( alpha <= ANGLE_TOLERANCE || alpha >= PIPI-ANGLE_TOLERANCE ) {
-                        numCorrectRings += 1;
+                        if( allAligned ) numCorrectRings += 1;
                         arcs[i].color = TFT_GREEN;
                     } else {
                         arcs[i].color = TFT_RED;
@@ -208,7 +225,6 @@ void GameUpdate() {
                     time_back = time;
                     time0 = GetMillis();
                 }
-                
             }
             break;
 
@@ -267,12 +283,13 @@ void GameUpdate() {
                         NETW::SignalCompletion();
                         #endif
                     } else {
-                        // TODO: use GS_LEVEL_TRANSITION for some animations
-                        state = GS_PLAYING;
+                        state = GS_PREPARING_LEVEL;
                         for(int i=0; i<numArcs[currLevel]; i++ ) {
                             arcs[i].enabled = true;
                             arcs[i].color = TFT_WHITE;
-                            arcs[i].posX = 0.0f; arcs[i].posY = 0.0f;
+                            arcs[i].posX = 0.0f; arcs[i].posY = -SCREEN_HEIGHT_F;
+                            arcs[i].velX = randomFloat(-3.0f,3.0f);
+                            arcs[i].velY = randomFloat(-3.0f,-0.3f);
                         }
                     }
                     time0 = GetMillis();

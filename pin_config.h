@@ -4,7 +4,7 @@
 
 
 /* CUSTOM DEFINES */
-#define WIFI_ENABLED     0
+#define WIFI_ENABLED     1
 #define WIFI_SSID        "Lo Spirito Della Nonna"
 #define WIFI_PASSWORD    "SoloLeiLaSa"
 #define API_BASE_URL     "http://192.168.1.100/api"

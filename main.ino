@@ -5,16 +5,19 @@
 #include <OneButton.h>
 #include <RotaryEncoder.h>
 #include "network.h"
-
+#include "unlock.h"
+#include "header.h"
 unsigned long GetMillis() { return millis(); }
 
 /*
 TODOS:
-   - start screen
-   - test with sleeps to reduce CPU usage if possible
+   - setup levels data (ring speed / offset / number)
+   - encoder LEDs to show the 4 levels in red/green
+   - read in background bomb timer to display a game over screen if it finishes
    - sounds
-   - encoder LEDs
+   
    - use sprite as render buffer to avoid flickering
+   - test with sleeps to reduce CPU usage if possible
 */
 typedef struct {
     uint8_t cmd;
@@ -39,6 +42,9 @@ lcd_cmd_t lcd_st7789v[] = {
 };
 TFT_eSPI tft = TFT_eSPI(170,320); // Create TFT object
 
+uint16_t AlphaBlend(uint8_t alpha, uint16_t fgc, uint16_t bgc) {
+    return tft.alphaBlend(alpha, fgc, bgc);
+}
 Arc* gameArcs;
 void io_task(void *param); // handles user I/O and WiFi
 
@@ -52,12 +58,8 @@ void setup() {
     tft.init();
     tft.setRotation(1);
 
-    
     //tft.begin();
     //tft.setRotation(1);
-    tft.fillScreen(TFT_BLACK);
-
-
     // Update Embed initialization parameters
     for (uint8_t i = 0; i < (sizeof(lcd_st7789v) / sizeof(lcd_cmd_t)); i++) {
         tft.writecommand(lcd_st7789v[i].cmd);
@@ -69,6 +71,7 @@ void setup() {
             delay(120);
         }
     }
+
 
     button.attachClick(GamePressButton);
     button.attachLongPressStart(GameLongPressButton);
@@ -87,25 +90,45 @@ void loop() {
     tft.fillScreen(TFT_BLACK);
     int numArc = 0;
     uint32_t arcCol;
-    
-    while( gameArcs[numArc].enabled ) {
-        tft.drawSmoothArc(
-        /* center x,y          */ SCREEN_WIDTH/2 + gameArcs[numArc].posX, SCREEN_HEIGHT/2 + gameArcs[numArc].posY,
-        /* inner, outer radius */ gameArcs[numArc].radius+1, gameArcs[numArc].radius-2,
-        /* stard and end angle */ radtodeg(gameArcs[numArc].angle) - 5, radtodeg(gameArcs[numArc].angle) + 5,
-        /* fg_col, bg_col      */ gameArcs[numArc].color, TFT_BLACK, 
-        /* round edges         */ true
-        );
-        numArc++;
+    int ww,hh;
+    GameState gs = GetState();
+    bool headerPresented = false;
+    if( gs == GS_HEADER ) {
+        if( !headerPresented ) {
+            ww = 320;
+            hh = 170;
+            tft.pushImage(320/2-ww/2, 170/2-hh/2, ww, hh, (uint16_t *)header);
+            headerPresented = true;
+        }
     }
-    // r = arc outer corner radius, ir = arc inner radius. Arc thickness = r-ir+1
-    tft.drawSmoothRoundRect( 
-    /* topleft x,y */ GetBarX() - BAR_WIDTH/2, GetBarY() - BAR_HEIGHT/2, 
-    /* r,ir        */ 2, 0,
-    /* w,h         */ BAR_WIDTH, BAR_HEIGHT,
-    /* fg,bg color */ TFT_WHITE, TFT_BLACK,
-    /* quadrants   */ 0xF // draw all quadrants
-    );
+
+    if( gs == GS_PLAYING || gs == GS_LEVEL_TRANSITION || gs == GS_CHECKING_WRONG || 
+        gs == GS_PREPARING_LEVEL || gs == GS_CHECKING_RIGHT ) {
+        while( gameArcs[numArc].enabled ) {
+            tft.drawSmoothArc(
+            /* center x,y          */ SCREEN_WIDTH/2 + gameArcs[numArc].posX, SCREEN_HEIGHT/2 + gameArcs[numArc].posY,
+            /* inner, outer radius */ gameArcs[numArc].radius+1, gameArcs[numArc].radius-2,
+            /* stard and end angle */ radtodeg(gameArcs[numArc].angle) - 5, radtodeg(gameArcs[numArc].angle) + 5,
+            /* fg_col, bg_col      */ gameArcs[numArc].color, TFT_BLACK, 
+            /* round edges         */ true
+            );
+            numArc++;
+        }
+        // r = arc outer corner radius, ir = arc inner radius. Arc thickness = r-ir+1
+        tft.drawSmoothRoundRect( 
+        /* topleft x,y */ GetBarX() - BAR_WIDTH/2, GetBarY() - BAR_HEIGHT/2, 
+        /* r,ir        */ 2, 0,
+        /* w,h         */ BAR_WIDTH, BAR_HEIGHT,
+        /* fg,bg color */ TFT_WHITE, TFT_BLACK,
+        /* quadrants   */ 0xF // draw all quadrants
+        );
+    }
+    if( gs == GS_GAME_OVER ) {
+        ww = 202;
+        hh = 170;
+        tft.pushImage(320/2-ww/2, 170/2-hh/2, ww, hh, (uint16_t *)unlock);
+        delay(1000); // no need for quick updates
+    }
     GameUpdate();
     delay(5);
 }
@@ -113,23 +136,6 @@ void loop() {
 
 void io_task(void *param)
 {
-    //static lv_disp_draw_buf_t draw_buf;
-    //static lv_color_t *buf1, *buf2;
-
-
-    // Update Embed initialization parameters
-    /*
-    for (uint8_t i = 0; i < (sizeof(lcd_st7789v) / sizeof(lcd_cmd_t)); i++) {
-        tft.writecommand(lcd_st7789v[i].cmd);
-        for (int j = 0; j < (lcd_st7789v[i].len & 0x7f); j++) {
-            tft.writedata(lcd_st7789v[i].data[j]);
-        }
-
-        if (lcd_st7789v[i].len & 0x80) {
-            delay(120);
-        }
-    }
-    */
 
     // Init the networking
     #if(WIFI_ENABLED == 1)
